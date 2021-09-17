@@ -1,3 +1,4 @@
+import com.sun.tools.javac.jvm.Gen;
 import org.arl.fjage.Message;
 import org.arl.fjage.param.ParameterReq;
 import org.arl.fjage.param.ParameterRsp;
@@ -6,6 +7,7 @@ import org.arl.fjage.sentuator.ConfigParam;
 import org.arl.fjage.sentuator.GenericMeasurement;
 import org.arl.fjage.sentuator.Quantity;
 import org.arl.fjage.sentuator.SentuatorParam;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -40,10 +42,17 @@ public class JsonTests
     m.set("salinity", new Quantity(35 + Math.random(), "ppt"));
     m.set("temperature", new Quantity(27 + Math.random(), "C"));
     m.set("depth", new Quantity(1 + Math.random(), "m"));
-    serializeAndDeserialize(m);
+    final Message message = serializeAndDeserialize(m);
+
+    Assert.assertEquals(GenericMeasurement.class, message.getClass());
+    final GenericMeasurement m2 = (GenericMeasurement) message;
+    Assert.assertEquals(m.getSensorType(), m2.getSensorType());
+    Assert.assertEquals(m.getMessageID(), message.getMessageID());
+    Assert.assertEquals(m.getInReplyTo(), message.getInReplyTo());
+    Assert.assertEquals(m.getSentAt(), message.getSentAt());
   }
 
-  private void serializeAndDeserialize(Message message) {
+  private Message serializeAndDeserialize(Message message) {
     final JsonMessage jsonMessage = new JsonMessage();
     jsonMessage.message = message;
     final String json = jsonMessage.toJson();
@@ -51,5 +60,6 @@ public class JsonTests
 
     final JsonMessage jsonMessage1 = JsonMessage.fromJson(json);
     log.info("<< " + jsonMessage1.toJson());
+    return jsonMessage1.message;
   }
 }
